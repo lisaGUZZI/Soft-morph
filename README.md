@@ -1,6 +1,16 @@
-# Differentiable Soft Morphological Filters for Medical Image Segmentation
 
-Accepted [paper](https://hal.science/hal-04592007) at **MICCAI 2024**
+<div align="center">    
+ 
+# Differentiable Soft Morphological Filters for Medical Image Segmentation
+![Inria](https://img.shields.io/badge/-INRIA-red) 
+![Eurecom](https://img.shields.io/badge/-EURECOM-blue) <br> 
+[![Conference](https://img.shields.io/badge/MICCAI-2024-red)](https://conferences.miccai.org/2024/en/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+<br>
+Accepted [paper](https://papers.miccai.org/miccai-2024/paper/0322_paper.pdf) at **[MICCAI 2024](https://conferences.miccai.org/2024/en/)**
+</div>
+
+
 
 * [Abstract](#abstract)
 * [Content](#content)
@@ -49,23 +59,16 @@ The filters have been tested on  :
 ## Citation
 To use in your research, please cite our paper:
 ```bibtex
-@inproceedings{guzzi:hal-04592007,
-  TITLE = {{Differentiable Soft Morphological Filters for Medical Image Segmentation}},
-  AUTHOR = {Guzzi, Lisa and Zuluaga, Maria A. and Lareyre, Fabien and Di Lorenzo, Gilles and Goffart, S{\'e}bastien and Chierici, Andrea and Raffort, Juliette and Delingette, Herv{\'e}},
-  URL = {https://hal.science/hal-04592007},
-  BOOKTITLE = {{MICCAI 2024 - Medical Image Computing and Computer Assisted Intervention}},
-  ADDRESS = {Marrakesh, Morocco},
-  YEAR = {2024},
-  MONTH = Oct,
-  KEYWORDS = {Image Segmentation ; Morphological Operations ; Deep Learning},
-  PDF = {https://hal.science/hal-04592007/file/Guzzi_MICCAI__Hal_Version.pdf},
-  HAL_ID = {hal-04592007},
-  HAL_VERSION = {v1},
+@InProceedings{Guz_Differentiable_MICCAI2024,
+        author = { Guzzi, Lisa and Zuluaga, Maria A. and Lareyre, Fabien and Di Lorenzo, Gilles and Goffart, Sébastien and Chierici, Andrea and Raffort, Juliette and Delingette, Hervé},
+        title = { { Differentiable Soft Morphological Filters for Medical Image Segmentation } },
+        booktitle = {proceedings of Medical Image Computing and Computer Assisted Intervention -- MICCAI 2024},
+        year = {2024},
+        publisher = {Springer Nature Switzerland},
+        volume = {LNCS 15008},
+        month = {October},
+        page = {pending}
 }
 ```
-
-Lisa Guzzi, Maria A. Zuluaga, Fabien Lareyre, Gilles Di Lorenzo, Sébastien Goffart, Andrea Chierici, Juliette Raffort, Hervé Delingette. Differentiable Soft Morphological Filters for Medical Image Segmentation. MICCAI 2024 - Medical Image Computing and Computer Assisted Intervention, Oct 2024, Marrakesh, Morocco. ⟨hal-04592007⟩
-
-
 ## Contact
 For questions or inquiries, please contact Lisa Guzzi at lisa.guzzi@inria.fr 
