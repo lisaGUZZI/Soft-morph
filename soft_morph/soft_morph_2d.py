@@ -2,19 +2,53 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from abc import ABC, abstractmethod
 from .base import SoftMorphOperator2D
 
+class SoftErosion2D(nn.Module):
+    """
+    Class implemented using Pytorch module to perform differentiable soft erosion on 2D input image.
+    """
 
-class SoftErosion2D(SoftMorphOperator2D):
-
-    def __init__(self, max_iter=1, connectivity=4):
-        indices_list = torch.tensor(
+    def __init__(self, max_iter, connectivity):
+        super(SoftErosion2D, self).__init__()
+        self.indices_list = torch.tensor(
             [[0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0], [0, 0], [1, 1]],
             dtype=torch.long,
         )
-        super().__init__(indices_list=indices_list, max_iter=1, connectivity=4)
+        self._max_iter = max_iter
+        self._connectivity = connectivity
 
-    def apply_transformation(self, n):
+    def test_format(self, img):
+        """
+        Function to check user inputs :
+        - Input image shape must either be [batch_size, channels, height, width] or [height, width].
+        - Input image values must be between 0 and 1.
+        - Connectivity represents the sutructuring element of the operation. In 2D, it must be either 4 or 8
+        """
+        dim = img.dim()
+        size = img.size()
+        if dim > 4 or dim < 2:
+            raise Exception(
+                f"Invalid input shape {size}. Expected [batch_size, channels, height, width] or [height, width]. Consider using the 3D version for 3D input images"
+            )
+        elif dim < 4:
+            if dim == 3:
+                # If the input dimension is 3 it might be due to input format [channels, height width]
+                if size[0] > 3:  # If this is not likely we raise an exception.
+                    raise Exception(
+                        f"Ambiguous input shape {size}. Expected [batch_size, channels, height, width] or [height, width]."
+                    )
+            for i in range(4 - dim):
+                img = img.unsqueeze(0)
+            print("Image resized to : ", img.size())
+        if img.min() < 0.0 or img.max() > 1.0:
+            raise ValueError("Input image values must be in the range [0, 1].")
+        if self._connectivity != 4 and self._connectivity != 8:
+            raise ValueError("Connectivity should either be 4 or 8")
+        return img
+
+    def allcondArithm(self, n):
         """
         Apply polynomial formula based on the boolean expression that defines an erosion on each 3x3 overlapping squares of the 2D image.
         Inputs : vector of 3x3 overlapping squares n, connectivity (4 or 8) defining the structuring element.
@@ -36,16 +70,16 @@ class SoftErosion2D(SoftMorphOperator2D):
         """
         img = self.test_format(img)  # Check user inputs
         for _ in range(self._max_iter):
-            img_padded = F.pad(img, (1, 1, 1, 1), mode="constant", value=1)
+            im_padded = F.pad(img, (1, 1, 1, 1), mode="constant", value=1)
             # Unfold the tensor to extract overlapping 3x3 windows
             unf = nn.Unfold((img.shape[2], img.shape[3]), 1, 0, 1)
-            unfolded = unf(img_padded)
+            unfolded = unf(im_padded)
             unfolded = unfolded.view(img.shape[0], img.shape[1], -1, unfolded.size(-1))
             # Apply the morphological operation formula to all windows simultaneously
             unfolded = unfolded[
-                :, :, :, (self._indices_list[:, 0] * 3) + self._indices_list[:, 1]
+                :, :, :, (self.indices_list[:, 0] * 3) + self.indices_list[:, 1]
             ]
-            output = self.apply_transformation(unfolded)
+            output = self.allcondArithm(unfolded)
             # Adjust the dimensions of output to match the spatial dimensions of im
             output = output.view(
                 output.size(0), output.size(1), img.shape[2], img.shape[3]
@@ -62,8 +96,7 @@ class SoftDilation2D(SoftMorphOperator2D):
             [[0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0], [0, 0], [1, 1]],
             dtype=torch.long,
         )
-
-        super().__init__(indices_list, max_iter, connectivity)
+        super().__init__(indices_list=indices_list, max_iter=max_iter, connectivity=connectivity)
 
     def apply_transformation(self, n):
         """
@@ -80,7 +113,7 @@ class SoftDilation2D(SoftMorphOperator2D):
     def forward(self, img):
         """
         Inputs :
-        - img : input 2D image of shape [batch_size, channels, height, width] or [height, width].
+        - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
         - iterations : number of times the morphological operation is repeated.
         - connectivity : connectivity representing the structuring element. Should either be 4 or 8.
         Output : Image after morphological operation
@@ -97,13 +130,11 @@ class SoftDilation2D(SoftMorphOperator2D):
             ]
             output = self.apply_transformation(unfolded)
             # Adjust the dimensions of output to match the spatial dimensions of im
-            img = output.view(
-                output.size(0), output.size(1), img.shape[2], img.shape[3]
-            )
+            img = output.view(output.size(0), output.size(1), img.shape[2], img.shape[3])
         return img
 
 
-class SoftMorphTransform2D(nn.Module):
+class SoftMorphTransform2D(nn.Module, ABC):
     """
     Base class for soft morphological operations (opening, closing) using PyTorch.
     Provides a framework to apply erosion followed by dilation (or vice versa)
@@ -115,64 +146,52 @@ class SoftMorphTransform2D(nn.Module):
         self.dilate = SoftDilation2D(max_iter, dilation_connectivity)
         self.erode = SoftErosion2D(max_iter, erosion_connectivity)
 
-    def apply_operations(self, input_img, order):
-        """
-        Applies the morphological operations in the given order.
+    @abstractmethod
+    def forward(self, input_img):
+        raise NotImplementedError(
+            "forward method must be implemented in derived classes"
+        )
 
-        Inputs:
-        - input_img: 2D input image of shape [batch_size, channels, height, width] or [height, width].
-        - iterations: Number of iterations for the operations.
-        - dilation_connectivity: Connectivity for dilation (4 or 8).
-        - erosion_connectivity: Connectivity for erosion (4 or 8).
-        - order: List defining the operation order, e.g., ['erode', 'dilate'] or ['dilate', 'erode'].
 
-        Output:
-        - Image after applying the morphological operations.
+class SoftClosing2D(SoftMorphTransform2D):
+    """
+    Class implemented using Pytorch module to perform differentiable soft closing on 2D input image.
+    """
+
+    def forward(self, img):
         """
-        output = input_img
-        for operation in order:
-            if operation == "dilate":
-                output = self.dilate(output)
-            elif operation == "erode":
-                output = self.erode(output)
+        Inputs :
+        - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
+        - iterations : number of times each morphological operation is repeated.
+        - connectivity : connectivity representing the structuring element. Should either be 4 or 8.
+                         Can define different connectivity values for erosion and dilation
+        Output : Image after morphological operation
+        """
+        output = self.dilate(img)
+        output = self.erode(output)
         return output
 
-    def forward(
-        self,
-        img,
-        order=None,
-    ):
-        if order is None:
-            raise NotImplementedError(
-                "Subclasses should implement the operation order."
-            )
-        return self.apply_operations(img, order)
 
-
-class SoftClosing(SoftMorphTransform2D):
+class SoftOpening2D(SoftMorphTransform2D):
     """
-    SoftClosing operation: Dilation followed by Erosion.
-    """
-
-    def forward(
-        self,
-        input_img,
-    ):
-        order = ["dilate", "erode"]
-        return super().forward(input_img, order)
-
-
-class SoftOpening(SoftMorphTransform2D):
-    """
-    SoftOpening operation: Erosion followed by Dilation.
+    Class implemented using Pytorch module to perform differentiable soft opening on 2D input image.
     """
 
     def forward(self, input_img):
-        order = ["erode", "dilate"]
-        return super().forward(input_img, order)
+        """
+        Inputs :
+        - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
+        - iterations : number of times each morphological operation is repeated.
+        - connectivity : connectivity representing the structuring element. Should either be 4 or 8.
+                         Can define different connectivity values for erosion and dilation
+        Output : Image after morphological operation
+        """
+        output = self.erode(input_img)
+        output = self.dilate(output)
+        return output
 
 
-class SoftSkeletonizer(SoftMorphOperator2D):
+class SoftSkeletonizer2D(SoftMorphOperator2D):
     """
     Class implemented using Pytorch module to perform differentiable soft skeletonization on 2D input image.
 
