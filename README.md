@@ -22,7 +22,7 @@ Accepted [paper](https://papers.miccai.org/miccai-2024/paper/0322_paper.pdf) at 
 ## Abstract
 Morphological operations such as erosion, dilation, and skeletonization offer valuable tools for processing and analyzing segmentation masks. Several studies have investigated the integration of differentiable morphological operations within deep segmentation neural networks, particularly for the computation of loss functions. However, those methods have shown limitations in terms of reliability, versatility or applicability to different types of operations and image dimensions. In this paper, we present a novel framework that provides differentiable morphological filters on probabilistic maps. Given any morphological filter defined on 2D or 3D binary images, our approach generates a soft version of this filter by translating Boolean expressions into multilinear polynomials. Moreover, using proxy polynomials, these soft filters have the same computational complexity as the original binary filter. We demonstrate on diverse biomedical datasets that our method can be easily integrated into neural networks either as a loss function or as the final morphological layer in a segmentation network. In particular, we show that the proposed filters for mask erosion, dilation or skeletonization lead to competitive solutions compared to the state-of-the-art.
 
-![example](github_imsges/Expected_Output.png)
+![example](github_images/Expected_Output.png)
 
 ## Content
 This repository contains the code for the soft and differentiable morphological filters used in the paper. 
