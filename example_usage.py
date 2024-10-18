@@ -8,7 +8,7 @@ from PIL import Image
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Import classes
-from soft_morph import SoftSkeletonizer, SoftErosion, SoftDilation, SoftClosing, SoftOpening
+from soft_morph import SoftSkeletonizer, SoftErosion2D, SoftDilation2D, SoftClosing, SoftOpening
 
 
 # Function to import the data and convert to tensor
@@ -54,22 +54,22 @@ def makefigtable(listoutputs, row_titles, col_titles):
     
 def simple_operation(image):
     # Define filters
-    erode = SoftErosion()
+    erode = SoftErosion2D(max_iter=1, connectivity=8)
     erode.to(DEVICE)
-    dilate = SoftDilation()
+    dilate = SoftDilation2D(max_iter=2, connectivity=4)
     dilate.to(DEVICE)
-    skeleton = SoftSkeletonizer(5)
+    skeleton = SoftSkeletonizer(max_iter=5)
     skeleton.to(DEVICE)
-    close = SoftClosing()
+    close = SoftClosing(max_iter=2, dilation_connectivity=8, erosion_connectivity=8)
     close.to(DEVICE)
-    openn = SoftOpening()
+    openn = SoftOpening(max_iter=2, dilation_connectivity=4, erosion_connectivity=4)
     openn.to(DEVICE)
     
-    eroded = erode(image, 1,8)
-    dilated = dilate(image, 2, 4)
+    eroded = erode(image)
+    dilated = dilate(image)
     skeletonized = skeleton(image)
-    closed = close(image, 2, 8, 8)
-    opened = openn(image, 2, 4, 4)
+    closed = close(image)
+    opened = openn(image)
     return [image.squeeze(), eroded.squeeze(), dilated.squeeze(), skeletonized.squeeze(), closed.squeeze(), opened.squeeze()]
 
 def main():
