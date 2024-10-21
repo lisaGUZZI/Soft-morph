@@ -15,7 +15,7 @@ Accepted [paper](https://papers.miccai.org/miccai-2024/paper/0322_paper.pdf) at 
 * [Abstract](#abstract)
 * [Content](#content)
 * [Usage](#usage)
-* [How to run](#howtorun)
+* [How to run](#how_to_run)
 * [Cite us](#citation)
 * [Contact](#contact)
 
