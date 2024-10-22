@@ -7,6 +7,8 @@ from scipy.ndimage import distance_transform_edt
 from PIL import Image
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(DEVICE)
+
 # Import classes
 from soft_morph import (
     SoftSkeletonizer2D,
@@ -26,16 +28,23 @@ def import_data(image_path):
     return image_ts
 
 
-# Function
 def generate_probabilistic_image(binary_image, scaling_factor):
-    distances_fg = distance_transform_edt(binary_image) * scaling_factor
-    distances_bg = distance_transform_edt(1 - binary_image) * scaling_factor
+    # Move the tensor back to CPU for NumPy operations
+    binary_image_cpu = binary_image.squeeze().cpu().numpy()
+
+    # Perform CPU operations using NumPy
+    distances_fg = distance_transform_edt(binary_image_cpu) * scaling_factor
+    distances_bg = distance_transform_edt(1 - binary_image_cpu) * scaling_factor
     distance_map = distances_fg - distances_bg
+    
+    # Normalize the distance map
     min_val = np.min(distance_map)
     max_val = np.max(distance_map)
     probabilistic_image = (distance_map - min_val) / (max_val - min_val)
+    
+    # Convert back to Torch tensor and move to the appropriate device (CPU or CUDA)
     return (
-        torch.tensor(probabilistic_image, dtype=torch.float32, device=DEVICE),
+        torch.tensor(probabilistic_image, dtype=torch.float32, device=DEVICE).unsqueeze(0).unsqueeze(0),
         distance_map,
     )
 
@@ -51,6 +60,7 @@ def makefigtable(listoutputs, row_titles, col_titles):
         # print(i)
         for j in range(nbcols):
             # print(j)
+            listoutputs[i][j] = listoutputs[i][j].cpu().numpy()
             axes[i, j].imshow(listoutputs[i][j], cmap=plt.cm.gray)
             axes[i, j].axis("off")
 
@@ -86,7 +96,7 @@ def simple_operation(image):
     skeleton.to(DEVICE)
     close = SoftClosing2D(max_iter=2, dilation_connectivity=8, erosion_connectivity=8)
     close.to(DEVICE)
-    openn = SoftOpening2D(max_iter=2, dilation_connectivity=4, erosion_connectivity=4)
+    openn = SoftOpening2D(max_iter=2, dilation_connectivity=4, erosion_connectivity=8)
     openn.to(DEVICE)
 
     eroded = erode(image)

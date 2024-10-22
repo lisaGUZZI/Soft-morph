@@ -15,7 +15,7 @@ Accepted [paper](https://papers.miccai.org/miccai-2024/paper/0322_paper.pdf) at 
 * [Abstract](#abstract)
 * [Content](#content)
 * [Usage](#usage)
-* [How to run](#how_to_run)
+* [How to run](#how-to-run)
 * [Cite us](#citation)
 * [Contact](#contact)
 
@@ -27,8 +27,8 @@ Morphological operations such as erosion, dilation, and skeletonization offer va
 
 ## Content
 This repository contains the code for the soft and differentiable morphological filters used in the paper. 
-* `SoftMorph2D.py` : 2D operations for Erosion, Dilation, Opening, Closing and Skeletonization
-* `SoftMorph3D.py` : 3D operations for Erosion, Dilation, Opening, Closing and Skeletonization
+* `soft_morph_2d.py` : 2D operations for Erosion, Dilation, Opening, Closing and Skeletonization
+* `soft_morph_3d.py` : 3D operations for Erosion, Dilation, Opening, Closing and Skeletonization
 * `example_usage.py` : example code to apply the soft morphological operations
 
 ## Usage
@@ -45,13 +45,17 @@ The filters have been tested on  :
 
 ### Filters description
 * ***SoftErosion*** : Erode the foreground 
-    * <u>forward parameters</u> (*image* = input image, *iterations* = number of times the morphological operation is repeated, *connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D)
+    * <u>init parameters</u> (*max_iter* = number of times the morphological operation is repeated, *connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D)
+    * <u>forward parameters</u> (*image* = input image)
 * ***SoftDilation*** : Dilate the foreground
-    * <u>forward parameters</u> (*image* = input image, *iterations* = number of times the morphological operation is repeated, *connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D)
+    * <u>init parameters</u> (*max_iter* = number of times the morphological operation is repeated, *connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D)
+    * <u>forward parameters</u> (*image* = input image)
 * ***SoftClosing*** : Dilation followed by an Erosion
-    * <u>forward parameters</u> (*image* = input image, *iterations* = number of times each morphological operation is repeated, *dilation_connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D for dilation operation, *erosion_connectivity* = structuring element for erosion)
+    * <u>init parameters</u> (*max_iter* = number of times each morphological operation is repeated, *dilation_connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D for dilation operation, *erosion_connectivity* = structuring element for erosion)
+    * <u>forward parameters</u> (*image* = input image)
 * ***SoftOpening*** : Erosion followed by a Dilation
-    * <u>forward parameters</u> (*image* = input image, *iterations* = number of times each morphological operation is repeated, *dilation_connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D for dilation operation, *erosion_connectivity* = structuring element for erosion)
+    * <u>init parameters</u> (*max_iter* = number of times each morphological operation is repeated, *dilation_connectivity* = structuring element [4, 8] in 2D and [6, 18, 26] in 3D for dilation operation, *erosion_connectivity* = structuring element for erosion)
+    * <u>forward parameters</u> (*image* = input image)
 * ***SoftSkeletonizer*** : Repeated thinning operation to extract the centerline of the foreground
     * <u>init parameters</u> (*max_iter* = number of repeated thinning operation)
     * <u>forward parameters</u> (*image* = input image)
@@ -67,6 +71,8 @@ Anaconda can be installed in your user directory and does not interfere with the
 - Create the environment: `conda create -n soft_morph python=3.9`
 - Activate the environment: `conda activate soft_morph`
 - Install the dependencies: `pip install -r requirements.txt`
+### Demo Links
+- Example Soft Morph 2D  <a href="https://colab.research.google.com/github/lisaGUZZI/Soft-morph/blob/main/notebooks/example_soft_morph_2d.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 ## Citation
 To use in your research, please cite our paper:
