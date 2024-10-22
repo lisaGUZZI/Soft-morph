@@ -5,50 +5,16 @@ import torch.nn.functional as F
 from abc import ABC, abstractmethod
 from .base import SoftMorphOperator2D
 
-class SoftErosion2D(nn.Module):
-    """
-    Class implemented using Pytorch module to perform differentiable soft erosion on 2D input image.
-    """
+class SoftErosion2D(SoftMorphOperator2D):
 
-    def __init__(self, max_iter, connectivity):
-        super(SoftErosion2D, self).__init__()
-        self.indices_list = torch.tensor(
+    def __init__(self, max_iter=1, connectivity=4):
+        indices_list = torch.tensor(
             [[0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0], [0, 0], [1, 1]],
             dtype=torch.long,
         )
-        self._max_iter = max_iter
-        self._connectivity = connectivity
+        super().__init__(indices_list=indices_list, max_iter=max_iter, connectivity=connectivity)
 
-    def test_format(self, img):
-        """
-        Function to check user inputs :
-        - Input image shape must either be [batch_size, channels, height, width] or [height, width].
-        - Input image values must be between 0 and 1.
-        - Connectivity represents the sutructuring element of the operation. In 2D, it must be either 4 or 8
-        """
-        dim = img.dim()
-        size = img.size()
-        if dim > 4 or dim < 2:
-            raise Exception(
-                f"Invalid input shape {size}. Expected [batch_size, channels, height, width] or [height, width]. Consider using the 3D version for 3D input images"
-            )
-        elif dim < 4:
-            if dim == 3:
-                # If the input dimension is 3 it might be due to input format [channels, height width]
-                if size[0] > 3:  # If this is not likely we raise an exception.
-                    raise Exception(
-                        f"Ambiguous input shape {size}. Expected [batch_size, channels, height, width] or [height, width]."
-                    )
-            for i in range(4 - dim):
-                img = img.unsqueeze(0)
-            print("Image resized to : ", img.size())
-        if img.min() < 0.0 or img.max() > 1.0:
-            raise ValueError("Input image values must be in the range [0, 1].")
-        if self._connectivity != 4 and self._connectivity != 8:
-            raise ValueError("Connectivity should either be 4 or 8")
-        return img
-
-    def allcondArithm(self, n):
+    def apply_transformation(self, n):
         """
         Apply polynomial formula based on the boolean expression that defines an erosion on each 3x3 overlapping squares of the 2D image.
         Inputs : vector of 3x3 overlapping squares n, connectivity (4 or 8) defining the structuring element.
@@ -77,10 +43,10 @@ class SoftErosion2D(nn.Module):
             unfolded = unfolded.view(img.shape[0], img.shape[1], -1, unfolded.size(-1))
             # Apply the morphological operation formula to all windows simultaneously
             unfolded = unfolded[
-                :, :, :, (self.indices_list[:, 0] * 3) + self.indices_list[:, 1]
+                :, :, :, (self._indices_list[:, 0] * 3) + self._indices_list[:, 1]
             ]
-            output = self.allcondArithm(unfolded)
-            # Adjust the dimensions of output to match the spatial dimensions of im
+            output = self.apply_transformation(unfolded)
+            # Adjust the dimensions of output to match the spatial dimensions of img
             output = output.view(
                 output.size(0), output.size(1), img.shape[2], img.shape[3]
             )
@@ -147,7 +113,7 @@ class SoftMorphTransform2D(nn.Module, ABC):
         self.erode = SoftErosion2D(max_iter, erosion_connectivity)
 
     @abstractmethod
-    def forward(self, input_img):
+    def forward(self, img):
         raise NotImplementedError(
             "forward method must be implemented in derived classes"
         )
@@ -162,9 +128,6 @@ class SoftClosing2D(SoftMorphTransform2D):
         """
         Inputs :
         - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
-        - iterations : number of times each morphological operation is repeated.
-        - connectivity : connectivity representing the structuring element. Should either be 4 or 8.
-                         Can define different connectivity values for erosion and dilation
         Output : Image after morphological operation
         """
         output = self.dilate(img)
@@ -177,7 +140,7 @@ class SoftOpening2D(SoftMorphTransform2D):
     Class implemented using Pytorch module to perform differentiable soft opening on 2D input image.
     """
 
-    def forward(self, input_img):
+    def forward(self, img):
         """
         Inputs :
         - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
@@ -186,7 +149,7 @@ class SoftOpening2D(SoftMorphTransform2D):
                          Can define different connectivity values for erosion and dilation
         Output : Image after morphological operation
         """
-        output = self.erode(input_img)
+        output = self.erode(img)
         output = self.dilate(output)
         return output
 
@@ -266,7 +229,7 @@ class SoftSkeletonizer2D(SoftMorphOperator2D):
     def forward(self, img):
         """
         Input :
-        - im : input 2D image of shape [batch_size, channels, height, width] or [height, width].
+        - img : input 2D image of shape [batch_size, channels, height, width] or [height, width].
         Output : Image after morphological operation
         """
         img = self.test_format(img)
@@ -286,7 +249,7 @@ class SoftSkeletonizer2D(SoftMorphOperator2D):
                     (self._indices_list[o][:, 0] * 3) + self._indices_list[o][:, 1],
                 ]
                 output = self.apply_transformation(unfolded)
-                # Adjust the dimensions of output to match the spatial dimensions of im
+                # Adjust the dimensions of output to match the spatial dimensions of img
                 output = output.view(
                     output.size(0), output.size(1), img.shape[2], img.shape[3]
                 )
