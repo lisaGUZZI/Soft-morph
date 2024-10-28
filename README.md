@@ -73,6 +73,7 @@ Anaconda can be installed in your user directory and does not interfere with the
 - Install the dependencies: `pip install -r requirements.txt`
 ### Demo Links
 - Example Soft Morph 2D  <a href="https://colab.research.google.com/github/lisaGUZZI/Soft-morph/blob/main/notebooks/example_soft_morph_2d.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- Example Soft Morph 3D <a href="https://colab.research.google.com/github/lisaGUZZI/Soft-morph/blob/main/notebooks/example_soft_morph_3d.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 ## Citation
 To use in your research, please cite our paper:
